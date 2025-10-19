@@ -1,32 +1,39 @@
-// product-grid/script.js
 export default async (element, config) => {
   try {
-    const products = Array.isArray(config.products) ? config.products : [];
-    if (!products.length) return;
+    // Use products from config, or default to 3 demo products
+    const products = Array.isArray(config.products) ? config.products : [
+      { name: 'Widget A', price: 19.99, image: 'https://picsum.photos/200?1' },
+      { name: 'Widget B', price: 29.99, image: 'https://picsum.photos/200?2' },
+      { name: 'Widget C', price: 9.99,  image: 'https://picsum.photos/200?3' }
+    ];
 
-    if (!config.html) throw new Error("template.html URL is required");
-    const res = await fetch(config.html);
-    if (!res.ok) throw new Error("Failed to fetch template.html");
-    const templateHTML = await res.text();
+    // Fallback template if none provided
+    const templateHTML = config.html ? await (await fetch(config.html)).text() :
+      `<div class="product-card">
+         <img src="{{image}}" alt="{{name}}" />
+         <h3>{{name}}</h3>
+         <p>$ {{price}}</p>
+         <button>{{buttonText}}</button>
+       </div>`;
 
     // Create a grid container
     const grid = document.createElement('div');
     grid.className = 'snaplet-product-grid';
 
     products.forEach(product => {
-      // Replace placeholders in the template
+      // Replace placeholders
       let cardHTML = templateHTML
         .replace(/{{image}}/g, product.image)
         .replace(/{{name}}/g, product.name)
         .replace(/{{price}}/g, product.price.toFixed(2))
         .replace(/{{buttonText}}/g, config.buttonText || 'Add');
 
-      // Use <template> for safe parsing
+      // Parse HTML safely using <template>
       const template = document.createElement('template');
       template.innerHTML = cardHTML.trim();
       const card = template.content.firstElementChild;
 
-      if (!card) return; // skip if template is empty
+      if (!card) return;
 
       // Add button handler
       const button = card.querySelector('button');
