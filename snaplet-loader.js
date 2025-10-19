@@ -1,7 +1,7 @@
 // Snaplet Loader v0
-// Author: Archiste
+// Author: CodeArchiste
 // License: Apache 2.0
-// https://snaplet-web.github.io/
+// https://codearchiste.github.io/snaplet-demo/
 
 class SnapLet extends HTMLElement {
   constructor() {
