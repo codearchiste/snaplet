@@ -1,21 +1,21 @@
-// script.js for Snaplet Product Grid
+// product-grid/script.js
 export default async (element, config) => {
   try {
-    const products = config.products || [];
+    const products = Array.isArray(config.products) ? config.products : [];
     if (!products.length) return;
 
     if (!config.html) throw new Error("template.html URL is required");
-    const response = await fetch(config.html);
-    if (!response.ok) throw new Error("Failed to fetch template.html");
-    const templateHTML = await response.text();
+    const res = await fetch(config.html);
+    if (!res.ok) throw new Error("Failed to fetch template.html");
+    const templateHTML = await res.text();
 
-    // Create grid container
+    // Create a grid container
     const grid = document.createElement('div');
     grid.className = 'snaplet-product-grid';
 
     products.forEach(product => {
-      // Replace placeholders
-      const cardHTML = templateHTML
+      // Replace placeholders in the template
+      let cardHTML = templateHTML
         .replace(/{{image}}/g, product.image)
         .replace(/{{name}}/g, product.name)
         .replace(/{{price}}/g, product.price.toFixed(2))
@@ -28,7 +28,7 @@ export default async (element, config) => {
 
       if (!card) return; // skip if template is empty
 
-      // Attach button click handler
+      // Add button handler
       const button = card.querySelector('button');
       if (button) {
         button.addEventListener('click', () => {
