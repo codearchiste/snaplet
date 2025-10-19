@@ -1,4 +1,4 @@
-// Snaplet Loader v4.0
+// Snaplet Loader v1.0
 // Author: Archiste
 // License: Apache 2.0
 // https://snaplet-web.github.io/
