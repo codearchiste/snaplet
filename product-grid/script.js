@@ -1,27 +1,27 @@
 export default async (element, config) => {
   try {
-    // Always use these 3 demo products
-    const products = [
+    // Built-in demo products
+    const demoProducts = [
       { name: 'Widget A', price: 19.99, image: 'https://picsum.photos/200?1' },
       { name: 'Widget B', price: 29.99, image: 'https://picsum.photos/200?2' },
       { name: 'Widget C', price: 9.99,  image: 'https://picsum.photos/200?3' }
     ];
 
-    // Inline template for product card
-    const templateHTML = `
-      <div class="product-card">
-        <img src="{{image}}" alt="{{name}}" />
-        <h3>{{name}}</h3>
-        <p>$ {{price}}</p>
-        <button>{{buttonText}}</button>
-      </div>
-    `;
+    // Combine built-in products with config.products (if any)
+    const userProducts = Array.isArray(config.products) ? config.products : [];
+    const products = [...demoProducts, ...userProducts];
+
+    if (!config.html) throw new Error("template.html URL is required");
+    const res = await fetch(config.html);
+    if (!res.ok) throw new Error("Failed to fetch template.html");
+    const templateHTML = await res.text();
 
     // Create grid container
     const grid = document.createElement('div');
     grid.className = 'snaplet-product-grid';
 
     products.forEach(product => {
+      // Replace placeholders in the template
       let cardHTML = templateHTML
         .replace(/{{image}}/g, product.image)
         .replace(/{{name}}/g, product.name)
@@ -32,7 +32,9 @@ export default async (element, config) => {
       template.innerHTML = cardHTML.trim();
       const card = template.content.firstElementChild;
 
-      // Add button click handlers
+      if (!card) return;
+
+      // Add button handler
       const button = card.querySelector('button');
       if (button) {
         button.addEventListener('click', () => {
