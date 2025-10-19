@@ -2,9 +2,9 @@ export default async (element, config) => {
   try {
     // Built-in demo products
     const demoProducts = [
-      { name: 'Widget A', price: 19.99, image: 'https://picsum.photos/200?4' },
-      { name: 'Widget B', price: 29.99, image: 'https://picsum.photos/200?5' },
-      { name: 'Widget C', price: 9.99,  image: 'https://picsum.photos/200?6' }
+      { name: 'Widget A1', price: 19.20, image: 'https://picsum.photos/200?4' },
+      { name: 'Widget B2', price: 29.20, image: 'https://picsum.photos/200?5' },
+      { name: 'Widget C3', price: 9.20,  image: 'https://picsum.photos/200?6' }
     ];
 
     // Combine built-in products with config.products (if any)
