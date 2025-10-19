@@ -1,37 +1,31 @@
-// product-grid/script.js (plain JS)
-window['productGrid'] = (element, config) => {
+export default async (element, config) => {
   const products = config.products || [];
   if (!products.length) return;
 
+  if (!config.html) throw new Error("template.html URL is required");
+  const response = await fetch(config.html);
+  if (!response.ok) throw new Error("Failed to fetch template.html");
+  const templateHTML = await response.text();
+
+  // Create grid container
   const grid = document.createElement('div');
-  grid.style.display = 'grid';
-  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
-  grid.style.gap = '10px';
+  grid.className = 'snaplet-product-grid';
 
-  products.forEach(p => {
-    const card = document.createElement('div');
-    card.style.border = '1px solid #ccc';
-    card.style.borderRadius = '6px';
-    card.style.padding = '5px';
-    card.style.textAlign = 'center';
+  products.forEach(product => {
+    // Replace all placeholders
+    const cardHTML = templateHTML
+      .replace(/{{image}}/g, product.image)
+      .replace(/{{name}}/g, product.name)
+      .replace(/{{price}}/g, product.price.toFixed(2))
+      .replace(/{{buttonText}}/g, config.buttonText || 'Add');
 
-    const img = document.createElement('img');
-    img.src = p.image;
-    img.style.width = '100%';
-    img.style.borderRadius = '4px';
+    // Convert string to DOM and append only elements
+    const temp = document.createElement('div');
+    temp.innerHTML = cardHTML;
 
-    const name = document.createElement('div');
-    name.textContent = p.name;
-
-    const price = document.createElement('div');
-    price.textContent = '$' + p.price.toFixed(2);
-
-    const btn = document.createElement('button');
-    btn.textContent = config.buttonText || 'Add';
-    btn.onclick = () => alert(p.name + ' added to cart');
-
-    card.append(img, name, price, btn);
-    grid.appendChild(card);
+    Array.from(temp.childNodes)
+      .filter(node => node.nodeType === Node.ELEMENT_NODE)
+      .forEach(node => grid.appendChild(node));
   });
 
   element.appendChild(grid);
