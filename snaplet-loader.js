@@ -1,49 +1,43 @@
 class SnapLet extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-    }
-  
-    connectedCallback() {
-      const configAttr = this.getAttribute('data-config');
-      if (!configAttr) return console.error('Snaplet Load Error: Missing data-config');
-  
-      const config = JSON.parse(configAttr);
-  
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: 'open' });
+  }
+
+  async connectedCallback() {
+    try {
+      const scriptTag = this.querySelector('script[type="application/json"]');
+      if (!scriptTag) throw new Error('Missing <script type="application/json">');
+
+      const config = JSON.parse(scriptTag.textContent);
+      scriptTag.remove(); // Remove script tag to prevent display
+
       // Load CSS
       if (config.css) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = config.css;
-        this.shadowRoot.appendChild(link);
+        this.shadow.appendChild(link);
       }
-  
-      // Load HTML template
-      let container = document.createElement('div');
-      if (config.html) {
-        fetch(config.html)
-          .then(r => r.text())
-          .then(html => {
-            container.innerHTML = html;
-          })
-          .catch(err => console.warn('Failed to load HTML', err));
+
+      // Load JS module
+      if (!config.entry) throw new Error("Missing entry JS module");
+      const module = await import(config.entry);
+      if (module.default && typeof module.default === 'function') {
+        await module.default(this.shadow, config); // Pass Shadow DOM root
+      } else {
+        throw new Error("Entry module must export default function");
       }
-      this.shadowRoot.appendChild(container);
-  
-      // Load JS as standard script
-      if (config.entry) {
-        const script = document.createElement('script');
-        script.src = config.entry;
-        script.onload = () => {
-          if (typeof window[config.name] === 'function') {
-            window[config.name](container, config);
-          }
-        };
-        script.onerror = (err) => console.error('Snaplet JS Load Error', err);
-        document.body.appendChild(script);
-      }
+    } catch (err) {
+      console.error("Snaplet Load Error:", err);
+      const errorBox = document.createElement('div');
+      errorBox.style.border = "1px solid red";
+      errorBox.style.padding = "10px";
+      errorBox.style.backgroundColor = "#fee";
+      errorBox.textContent = "Snaplet Load Error: " + err.message;
+      this.shadow.appendChild(errorBox);
     }
   }
-  
-  customElements.define('snap-let', SnapLet);
-  
+}
+
+customElements.define('snap-let', SnapLet);
