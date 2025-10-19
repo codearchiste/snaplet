@@ -12,20 +12,30 @@ export default async (element, config) => {
   grid.className = 'snaplet-product-grid';
 
   products.forEach(product => {
-    // Replace all placeholders
+    // Replace placeholders
     const cardHTML = templateHTML
       .replace(/{{image}}/g, product.image)
       .replace(/{{name}}/g, product.name)
       .replace(/{{price}}/g, product.price.toFixed(2))
       .replace(/{{buttonText}}/g, config.buttonText || 'Add');
 
-    // Convert string to DOM and append only elements
+    // Convert string to DOM
     const temp = document.createElement('div');
     temp.innerHTML = cardHTML;
 
     Array.from(temp.childNodes)
       .filter(node => node.nodeType === Node.ELEMENT_NODE)
-      .forEach(node => grid.appendChild(node));
+      .forEach(node => {
+        // Find button inside this product card
+        const button = node.querySelector('button');
+        if (button) {
+          button.addEventListener('click', () => {
+            alert(`You clicked on ${product.name} ($${product.price.toFixed(2)})`);
+            console.log('Product clicked:', product);
+          });
+        }
+        grid.appendChild(node);
+      });
   });
 
   element.appendChild(grid);
