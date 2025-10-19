@@ -2,9 +2,9 @@ class SnapLet extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
+    this.config = null;
     this.container = document.createElement('div');
     this.shadow.appendChild(this.container);
-    this.config = null;
   }
 
   connectedCallback() {
@@ -36,7 +36,7 @@ class SnapLet extends HTMLElement {
       } else {
         throw new Error('Missing Snaplet configuration');
       }
-      if (config.debug) console.log('[Snaplet] Config loaded:', config);
+      if (this.config?.debug) console.log('[Snaplet] Config loaded:', config);
     } catch (err) {
       this._showError(err);
     }
@@ -54,15 +54,17 @@ class SnapLet extends HTMLElement {
     observer.observe(this);
   }
 
-  /** Load CSS, HTML, and JS */
+  /** Load CSS, HTML, and JS module */
   async _loadSnaplet() {
     if (!this.config) return;
 
     await this._loadCSS(this.config.css);
+
     if (this.config.html) await this._loadHTML(this.config.html);
 
-    if (!this.config.entry) throw new Error('Missing JS entry');
-    await this._loadScript(this.config.entry);
+    if (!this.config.entry) throw new Error('Missing JS entry module');
+
+    await this._loadJSModule(this.config.entry, this.config);
 
     this.dispatchEvent(new CustomEvent('snaplet-ready', { detail: this.config }));
 
@@ -98,19 +100,28 @@ class SnapLet extends HTMLElement {
     }
   }
 
-  /** Load JS as a classic <script> inside Shadow DOM */
-  _loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = src + (this.config.version ? `?v=${this.config.version}` : '');
-      script.onload = () => {
-        if (this.config.debug) console.log('[Snaplet] Script loaded:', src);
-        resolve();
-      };
-      script.onerror = e => reject(new Error('Failed to load script: ' + src));
-      this.shadow.appendChild(script);
-    });
+  /** Load JS module */
+  async _loadJSModule(entry, config) {
+    try {
+      let module;
+      if (entry.startsWith('data:text/javascript;base64,')) {
+        const scriptContent = atob(entry.split(',')[1]);
+        const blob = new Blob([scriptContent], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        module = await import(url);
+        URL.revokeObjectURL(url);
+      } else {
+        module = await import(entry + (config.version ? `?v=${config.version}` : ''));
+      }
+
+      if (module.default && typeof module.default === 'function') {
+        await module.default(this.container, config);
+      } else {
+        throw new Error('JS module must export default function');
+      }
+    } catch (err) {
+      throw new Error('Failed to load JS module: ' + err.message);
+    }
   }
 
   /** Show error box */
