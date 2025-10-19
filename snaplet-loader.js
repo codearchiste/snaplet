@@ -1,43 +1,48 @@
-class SnapLet extends HTMLElement {
-  constructor() {
-    super();
-    this.shadow = this.attachShadow({ mode: 'open' });
-  }
+export default async function(element, config){
+  const products = config.products || [];
+  if (!products.length) return;
 
-  async connectedCallback() {
-    try {
-      const scriptTag = this.querySelector('script[type="application/json"]');
-      if (!scriptTag) throw new Error('Missing <script type="application/json">');
+  if (!config.html) throw new Error("template.html URL is required");
 
-      const config = JSON.parse(scriptTag.textContent);
-      scriptTag.remove(); // Remove script tag to prevent display
+  try {
+    // Fetch the template
+    const response = await fetch(config.html);
+    if (!response.ok) throw new Error("Failed to fetch template.html");
+    const templateHTML = await response.text();
 
-      // Load CSS
-      if (config.css) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = config.css;
-        this.shadow.appendChild(link);
-      }
+    // Create grid container
+    const grid = document.createElement('div');
+    grid.className = 'snaplet-product-grid';
 
-      // Load JS module
-      if (!config.entry) throw new Error("Missing entry JS module");
-      const module = await import(config.entry);
-      if (module.default && typeof module.default === 'function') {
-        await module.default(this.shadow, config); // Pass Shadow DOM root
-      } else {
-        throw new Error("Entry module must export default function");
-      }
-    } catch (err) {
-      console.error("Snaplet Load Error:", err);
-      const errorBox = document.createElement('div');
-      errorBox.style.border = "1px solid red";
-      errorBox.style.padding = "10px";
-      errorBox.style.backgroundColor = "#fee";
-      errorBox.textContent = "Snaplet Load Error: " + err.message;
-      this.shadow.appendChild(errorBox);
-    }
+    products.forEach(function(product){
+      // Replace placeholders in template
+      const cardHTML = templateHTML
+        .replace(/{{image}}/g, product.image)
+        .replace(/{{name}}/g, product.name)
+        .replace(/{{price}}/g, product.price.toFixed(2))
+        .replace(/{{buttonText}}/g, config.buttonText || 'Add');
+
+      // Convert string to DOM and append only elements
+      const temp = document.createElement('div');
+      temp.innerHTML = cardHTML;
+
+      Array.from(temp.children).forEach(function(node){
+        // Optional: handle button click inside template
+        const btn = node.querySelector('button');
+        if (btn) btn.onclick = () => alert(product.name + ' added to cart');
+
+        grid.appendChild(node);
+      });
+    });
+
+    element.appendChild(grid);
+  } catch(err){
+    console.error("Snaplet error:", err);
+    const errorBox = document.createElement('div');
+    errorBox.style.border = '1px solid red';
+    errorBox.style.padding = '10px';
+    errorBox.style.backgroundColor = '#fee';
+    errorBox.textContent = 'Snaplet Load Error: ' + err.message;
+    element.appendChild(errorBox);
   }
 }
-
-customElements.define('snap-let', SnapLet);
