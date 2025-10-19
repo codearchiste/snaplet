@@ -1,0 +1,52 @@
+.snaplet-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.snaplet-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.snaplet-form-field label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #0f4c81;
+}
+
+.snaplet-form-field input,
+.snaplet-form-field textarea {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.snaplet-form-field input:focus,
+.snaplet-form-field textarea:focus {
+  outline: none;
+  border-color: #1e6bb8;
+}
+
+.snaplet-contact-form button {
+  background-color: #0f4c81;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.snaplet-contact-form button:hover {
+  background-color: #1e6bb8;
+}
+
+.snaplet-form-response {
+  font-weight: bold;
+  min-height: 20px;
+  margin-top: 5px;
+}
